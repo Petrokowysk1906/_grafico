@@ -1,0 +1,108 @@
+
+@startuml
+title SaúdeTech Dashboards - Diagrama de Componentes UML
+
+left to right direction
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Usuário" as Usuario
+component "Navegador Web" as Browser
+
+() "HTTP/HTTPS" as IHTTP
+() "SQL / PDO" as ISQL
+
+node "Contêiner Docker\nApache + PHP 8.2" as Docker {
+
+    component "Roteador\npublic/index.php" as Router
+
+    package "Aplicação PHP" {
+
+        package "Controllers\napp/Controllers/" {
+            component "DashboardController" as DashboardController
+            component "Demais Controllers" as OtherControllers
+        }
+
+        package "Core\napp/Core/" {
+            component "Core\nClasses compartilhadas" as Core
+        }
+
+        package "Repositories\napp/Repositories/" {
+            component "DashboardRepository" as DashboardRepository
+            component "Demais Repositories" as OtherRepositories
+        }
+
+        package "Config\napp/Config/" {
+            component "Configuração PDO" as Config
+        }
+
+        package "Views\nviews/" {
+            component "Dashboard\nindex.php" as DashboardView
+            component "Gráfico do Dashboard\n_grafico.php" as Grafico
+            component "Demais Views" as OtherViews
+            component "Layout e parciais\nviews/partials/" as Partials
+        }
+    }
+}
+
+database "PostgreSQL\nBanco saudetech" as DB
+artifact ".env\nVariáveis de ambiente" as Env
+
+' Usuário e comunicação HTTP
+Usuario --> Browser
+Browser -- IHTTP
+IHTTP -- Router : Requisições e respostas HTTP
+
+' Roteamento
+Router ..> DashboardController : Encaminha requisições
+Router ..> OtherControllers : Encaminha requisições
+
+' Controllers e recursos compartilhados
+DashboardController ..> Core : Utiliza recursos comuns
+OtherControllers ..> Core
+
+' Acesso aos dados
+DashboardController ..> DashboardRepository : Consulta indicadores
+DashboardController ..> OtherRepositories : Consulta dados
+OtherControllers ..> OtherRepositories
+
+' Controllers encaminham dados às Views
+DashboardController ..> DashboardView : Encaminha dados
+OtherControllers ..> OtherViews : Encaminha dados
+
+' Configuração e persistência
+DashboardRepository ..> Config : Obtém conexão PDO
+OtherRepositories ..> Config : Obtém conexão PDO
+
+Config ..> Env : Lê configurações
+Config ..> ISQL : Utiliza SQL/PDO
+ISQL -- DB : Consultas ao banco
+
+' Composição das Views
+DashboardView ..> Grafico : Inclui gráfico
+DashboardView ..> Partials : Utiliza layout
+OtherViews ..> Partials : Utiliza layout
+
+note right of DashboardRepository
+Responsável pelo acesso aos dados
+utilizados nos indicadores.
+end note
+
+note right of Grafico
+views/dashboard/_grafico.php
+Componente visual do indicador.
+end note
+
+legend bottom
+Grupo:  Alysson Lino dos Santos
+Arthur Luiz Oliveira Da Rosa
+Eduardo Cesar Souza
+Lenin Petrokowysk da Cunha
+
+Maria Fernanda Mayumi Alves de Oliveira
+Data: 10/10/2026
+Ferramenta: PlantUML
+endlegend
+
+@enduml
